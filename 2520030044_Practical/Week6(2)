@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+int main() {
+    char command[100];
+    pid_t pid;
+
+    while (1) {
+        // Display prompt
+        printf("myshell> ");
+        fflush(stdout);
+
+        // Read user input
+        fgets(command, sizeof(command), stdin);
+
+        // Remove newline
+        command[strcspn(command, "\n")] = '\0';
+
+        // Check exit condition
+        if (strcmp(command, "exit") == 0) {
+            printf("Exiting shell...\n");
+            break;
+        }
+
+        // Create child process
+        pid = fork();
+
+        if (pid < 0) {
+            perror("fork failed");
+        }
+        else if (pid == 0) {
+            // Child process
+            printf("Child process created. PID = %d\n", getpid());
+
+            // Execute command
+            execlp("xdg-open", "xdg-open", command, (char *)NULL);
+
+            // If exec fails
+            perror("exec failed");
+        }
+        else {
+            // Parent process
+            printf("Browser/Parent is still running. PID = %d\n", getpid());
+        }
+    }
+
+    return 0;
+}
