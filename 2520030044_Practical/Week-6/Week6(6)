@@ -1,0 +1,117 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+#define SUBJECTS 5
+
+int main() {
+    int fd1, fd2;
+    int *student1, *student2;
+    pid_t p1, p2;
+
+    /* Create shared memory for Student 1 */
+    fd1 = shm_open("/student1_marks", O_CREAT | O_RDWR, 0666);
+    ftruncate(fd1, SUBJECTS * sizeof(int));
+
+    student1 = mmap(NULL, SUBJECTS * sizeof(int),
+                    PROT_READ | PROT_WRITE,
+                    MAP_SHARED, fd1, 0);
+
+    /* Create shared memory for Student 2 */
+    fd2 = shm_open("/student2_marks", O_CREAT | O_RDWR, 0666);
+    ftruncate(fd2, SUBJECTS * sizeof(int));
+
+    student2 = mmap(NULL, SUBJECTS * sizeof(int),
+                    PROT_READ | PROT_WRITE,
+                    MAP_SHARED, fd2, 0);
+
+    /* Teacher enters Student 1 marks */
+    printf("Enter marks for Student 1:\n");
+
+    for (int i = 0; i < SUBJECTS; i++) {
+        printf("Subject %d: ", i + 1);
+        scanf("%d", &student1[i]);
+    }
+
+    /* Teacher enters Student 2 marks */
+    printf("\nEnter marks for Student 2:\n");
+
+    for (int i = 0; i < SUBJECTS; i++) {
+        printf("Subject %d: ", i + 1);
+        scanf("%d", &student2[i]);
+    }
+
+    printf("\nMarks successfully stored in shared memory.\n\n");
+
+    /* Create Student 1 process */
+    p1 = fork();
+
+    if (p1 == 0) {
+
+        int total = 0;
+
+        printf("Student 1\n");
+        printf("--------------------------------\n");
+
+        for (int i = 0; i < SUBJECTS; i++) {
+            printf("Subject %d : %d\n", i + 1, student1[i]);
+            total += student1[i];
+        }
+
+        printf("\nTotal : %d\n", total);
+        printf("Average : %.2f\n", total / 5.0);
+
+        munmap(student1, SUBJECTS * sizeof(int));
+        close(fd1);
+
+        exit(0);
+    }
+
+    /* Create Student 2 process */
+    p2 = fork();
+
+    if (p2 == 0) {
+
+        int total = 0;
+
+        printf("\nStudent 2\n");
+        printf("--------------------------------\n");
+
+        for (int i = 0; i < SUBJECTS; i++) {
+            printf("Subject %d : %d\n", i + 1, student2[i]);
+            total += student2[i];
+        }
+
+        printf("\nTotal : %d\n", total);
+        printf("Average : %.2f\n", total / 5.0);
+
+        munmap(student2, SUBJECTS * sizeof(int));
+        close(fd2);
+
+        exit(0);
+    }
+
+    /* Teacher waits for both students */
+    waitpid(p1, NULL, 0);
+    waitpid(p2, NULL, 0);
+
+    printf("\nBoth students completed their calculations.\n");
+
+    /* Clean up shared memory */
+    munmap(student1, SUBJECTS * sizeof(int));
+    munmap(student2, SUBJECTS * sizeof(int));
+
+    close(fd1);
+    close(fd2);
+
+    shm_unlink("/student1_marks");
+    shm_unlink("/student2_marks");
+
+    printf("Shared memory cleaned up.\n");
+
+    return 0;
+}

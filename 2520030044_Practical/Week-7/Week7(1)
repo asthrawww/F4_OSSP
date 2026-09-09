@@ -1,0 +1,84 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+
+    int fd[2];
+    pid_t producer, consumer;
+
+    /* Create anonymous pipe */
+    if (pipe(fd) == -1) {
+        perror("pipe failed");
+        exit(1);
+    }
+
+    /* Create Producer process */
+    producer = fork();
+
+    if (producer == -1) {
+        perror("fork failed");
+        exit(1);
+    }
+
+    if (producer == 0) {
+
+        /* Producer does not need read end */
+        close(fd[0]);
+
+        /* Redirect stdout to pipe */
+        dup2(fd[1], STDOUT_FILENO);
+
+        /* Close original pipe descriptor */
+        close(fd[1]);
+
+        /* Execute ls -l */
+        execlp("ls", "ls", "-l", (char *)NULL);
+
+        /* Runs only if exec fails */
+        perror("exec ls failed");
+        exit(1);
+    }
+
+    /* Create Consumer process */
+    consumer = fork();
+
+    if (consumer == -1) {
+        perror("fork failed");
+        exit(1);
+    }
+
+    if (consumer == 0) {
+
+        /* Consumer does not need write end */
+        close(fd[1]);
+
+        /* Redirect stdin to pipe */
+        dup2(fd[0], STDIN_FILENO);
+
+        /* Close original pipe descriptor */
+        close(fd[0]);
+
+        /* Execute grep ".c" */
+        execlp("grep", "grep", ".c", (char *)NULL);
+
+        /* Runs only if exec fails */
+        perror("exec grep failed");
+        exit(1);
+    }
+
+    /* Parent does not need either pipe end */
+    close(fd[0]);
+    close(fd[1]);
+
+    /* Wait for Producer */
+    waitpid(producer, NULL, 0);
+
+    /* Wait for Consumer */
+    waitpid(consumer, NULL, 0);
+
+    printf("Producer and Consumer completed successfully.\n");
+
+    return 0;
+}
