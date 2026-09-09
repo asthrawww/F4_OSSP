@@ -1,0 +1,52 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#define SUBJECTS 5
+
+int main() {
+    int fd;
+    int *marks;
+    int total = 0;
+    float average;
+
+    /* Open Student 2 shared memory */
+    fd = shm_open("/student2_marks", O_RDONLY, 0666);
+
+    if (fd == -1) {
+        perror("shm_open");
+        exit(1);
+    }
+
+    /* Map shared memory */
+    marks = mmap(NULL, SUBJECTS * sizeof(int),
+                 PROT_READ,
+                 MAP_SHARED, fd, 0);
+
+    if (marks == MAP_FAILED) {
+        perror("mmap");
+        exit(1);
+    }
+
+    printf("\nStudent 2\n");
+    printf("--------------------------------\n");
+
+    for (int i = 0; i < SUBJECTS; i++) {
+        printf("Subject %d : %d\n", i + 1, marks[i]);
+        total += marks[i];
+    }
+
+    average = total / 5.0;
+
+    printf("\nTotal : %d\n", total);
+    printf("Average : %.2f\n", average);
+
+    /* Cleanup */
+    munmap(marks, SUBJECTS * sizeof(int));
+    close(fd);
+
+    return 0;
+}
