@@ -1,0 +1,28 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main() {
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        perror("fork failed");
+        return 1;
+    }
+
+    if (pid == 0) {
+        // Child: open PDF
+        execlp("xdg-open", "xdg-open",
+               "/home/student/Downloads/lecture_notes.pdf",
+               (char *)NULL);
+
+        perror("exec failed");
+        exit(1);
+    }
+
+    // Parent: browser continues
+    printf("Browser is still running. PID = %d\n", getpid());
+    printf("PDF viewer launched as child process. PID = %d\n", pid);
+
+    return 0;
+}
