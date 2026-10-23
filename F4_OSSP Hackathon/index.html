@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Readers-Writers Database Simulator</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="header">
+        <div>
+            <h1>Readers–Writers Simulator</h1>
+            <p>Concurrent database access and synchronization</p>
+        </div>
+        <span class="badge">● SYSTEM ONLINE</span>
+    </header>
+
+    <main class="container">
+        <section class="stats">
+            <article class="card">
+                <p>Active Readers</p>
+                <h2 id="activeReaders">0</h2>
+            </article>
+            <article class="card">
+                <p>Writer Status</p>
+                <h2 id="writerStatus">Idle</h2>
+            </article>
+            <article class="card">
+                <p>Total Reads</p>
+                <h2 id="totalReads">0</h2>
+            </article>
+            <article class="card">
+                <p>Total Writes</p>
+                <h2 id="totalWrites">0</h2>
+            </article>
+        </section>
+
+        <section class="operations">
+            <article class="panel">
+                <h2>Reader Operation</h2>
+                <p>Readers can access the database concurrently.</p>
+                <label for="readerName">Reader name</label>
+                <input id="readerName" value="Reader-1">
+                <button id="readBtn" class="reader-btn">Run Read Operation</button>
+            </article>
+
+            <article class="panel">
+                <h2>Writer Operation</h2>
+                <p>Writers require exclusive database access.</p>
+                <label for="writerName">Writer name</label>
+                <input id="writerName" value="Writer-1">
+                <label for="recordKey">Record key</label>
+                <input id="recordKey" value="project_status">
+                <label for="recordValue">New value</label>
+                <input id="recordValue" value="Updated successfully">
+                <button id="writeBtn" class="writer-btn">Run Write Operation</button>
+            </article>
+        </section>
+
+        <section class="panel">
+            <div class="section-heading">
+                <h2>Database Records</h2>
+                <button id="resetBtn" class="reset-btn">Reset Demo</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Key</th>
+                            <th>Value</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsBody">
+                        <tr><td colspan="4">Loading records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>Synchronization Monitor</h2>
+            <p>Readers active: <strong id="sharedCount">0</strong></p>
+            <p>Writer active: <strong id="exclusiveState">No</strong></p>
+            <p>Waiting writers: <strong id="waitingWriters">0</strong></p>
+            <div class="progress">
+                <div id="queueFill"></div>
+            </div>
+            <p id="lockState">Ready for access</p>
+            <p id="lockDescription">
+                Readers share access while writers wait for exclusive access.
+            </p>
+        </section>
+
+        <section class="panel">
+            <h2>Activity Log</h2>
+            <div id="eventList">Waiting for events...</div>
+        </section>
+    </main>
+
+    <footer>
+        Readers–Writers Concurrent Database Simulator
+        <br>Developed using C, POSIX Threads, SQLite, HTML, CSS and JavaScript
+    </footer>
+
+    <div id="toast" role="status"></div>
+    <script src="/static/app.js"></script>
+</body>
+</html>
